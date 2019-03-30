@@ -22,11 +22,13 @@ BetaRandomPosteriorPriorPlotandMeanStdComparison <- function(a,b,n,p){
   posteriorBeta = b+n*(1-p)
   posteriorRandom <- rbeta(n, posteriorAlpha, posteriorBeta)
   maxDensity <- max(normalizedLikelihood, prior, posterior) # Use to make the y-axis high enough
-  #plot(xGrid, normalizedLikelihood, type = 'l', lwd = 3, col = "blue", xlim <- c(0,1), ylim <- c(0, maxDensity), xlab = "theta", 
-  #     ylab = 'Density', main = 'Bernoulli model - Beta(a,b) prior')
-  #lines(xGrid, posterior, lwd = 3, col = "red")
-  #lines(xGrid, prior, lwd = 3, col = "green")
-  #legend(x = 0.01, y = maxDensity*0.95, legend = c("Likelihood (normalized)", "Prior", "Posterior"), col = c("blue","green","red"), lwd = c(3,3,3), cex = 0.7)
+  
+  plot(xGrid, normalizedLikelihood, type = 'l', lwd = 3, col = "blue", xlim <- c(0,1), ylim <- c(0, maxDensity), xlab = "theta", 
+       ylab = 'Density', main = 'Bernoulli model - Beta(a,b) prior')
+  lines(xGrid, posterior, lwd = 3, col = "red")
+  lines(xGrid, prior, lwd = 3, col = "green")
+  legend(x = 0.01, y = maxDensity*0.95, legend = c("Likelihood (normalized)", "Prior", "Posterior"), col = c("blue","green","red"), lwd = c(3,3,3), cex = 0.7)
+  
   print(paste0("ground truth std: ", sqrt(posteriorAlpha*posteriorBeta/(((posteriorAlpha+posteriorBeta)^2)*(posteriorAlpha+posteriorBeta+1)))))
   print(paste0("std: ", sd(posteriorRandom)))
   print(paste0("Mean: ", mean(posteriorRandom)))
@@ -42,7 +44,7 @@ BetaRandomPosteriorPriorPlotandMeanStdComparison <- function(a,b,n,p){
   logOdds = log(posteriorRandomDraw/(1 - posteriorRandomDraw))
   density(logOdds)
   # Kommentera bort hist om du vill köra det bort kommenterade ovan, om båda delarna plottas så kommer manipulate-panelen inte upp.
-  hist(logOdds)
+  #hist(logOdds)
 }
 
 

@@ -65,17 +65,18 @@ drawFromPosterior <- function(mean, n, logy){
   tau2 = (sum(logy - mean)^2)/n
   posterior = dinvchisq(xGrid, n, tau2, log=FALSE)
   
-  maxDensity <- max(posterior)#normalizedLikelihood, prior, posterior) # Use to make the y-axis high enough
+  maxDensity <- max(posterior)
   
   posteriorRandomDraw <- rinvchisq(10000,  n, tau2)
   
+  #plotting
   attach(mtcars)
   par(mfrow=c(2,2))
   plot(xGrid, posterior, type = 'l', lwd = 3, col = "blue", xlim <- c(0,1), ylim <- c(0, maxDensity), xlab = "theta", 
-       ylab = 'Density', main = 'Bernoulli model - Beta(a,b) prior')
-  legend(x = 0.01, y = maxDensity*0.95, legend = c("Likelihood (normalized)", "Prior", "Posterior"), col = c("blue","green","red"), lwd = c(3,3,3), cex = 0.7)
+       ylab = 'Density', main = 'Chi Posterior of Variance')
   plot(sort(posteriorRandomDraw))
   
+  #part b)
   giniTheory = 2*pnorm(posteriorRandomDraw/sqrt(2), mean = 0, sd = 1) - 1
   
   logGini = log(giniTheory)
@@ -84,30 +85,15 @@ drawFromPosterior <- function(mean, n, logy){
   plot(distrubtionGiniLog)
   plot(distrubtionGini)
   
+  #part c)
   lowerData = getIntervalData(giniTheory, 0, 0.025)
   middleData = getIntervalData(giniTheory, 0.025, 0.975)
   upperData = getIntervalData(giniTheory, 0.975, 1)
   
-  density(middleData)
-  
-  
-  #posteriorRandomOverCondition = which(posteriorRandomDraw < 0.4)
-  #probabilityCondition = length(posteriorRandomOverCondition)/length(posteriorRandomDraw)
-  #trueProbability = pbeta(0.4, posteriorAlpha, posteriorBeta)
-  
-  #print(paste0("propability condition with random: ", probabilityCondition))
-  #(paste0("ground truth probability: ", trueProbability))
-  
-  #logOdds = log(posteriorRandomDraw/(1 - posteriorRandomDraw))
-  #density(logOdds)
-  # Kommentera bort hist om du vill köra det bort kommenterade ovan, om båda delarna plottas så kommer manipulate-panelen inte upp.
-  #hist(logOdds)
+  print(density(middleData))
+  print(min(middleData))
+  print(max(middleData))
 }
 
 num = length(logY)
 draws = drawFromPosterior(u, num, logY)
-#manipulate(
-#  num = length(logY)
-#  drawFromPosterior(u, num, logY)
-#  num = slider(1, 1000, step=1, initial = 2, label = "Number of trials")
-#)
