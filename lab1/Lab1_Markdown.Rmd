@@ -1,0 +1,247 @@
+---
+title: "Lab1"
+author: "Ludwig Thaung Elon Brange (ludth852, elobr959)"
+date: '2019-04-01'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Task 1
+
+###a)
+
+```{r taks1a, echo = FALSE}
+  alpha = 2
+  beta = 2
+  s = 14
+  num = 20
+  f = num - s
+  p = s/num
+  
+BetaRandomPosteriorPriorPlotandMeanStdComparison <- function(a,b,n,p){
+  
+  xGrid <- seq(0.001, 0.999, by=0.001)
+  normalizedLikelihood = dbeta(xGrid, 20*p+1, 20*(1-p)+1)
+  prior = dbeta(xGrid, a, b)
+  posterior = dbeta(xGrid, a+20*p, b+20*(1-p))
+  posteriorAlpha = a+20*p
+  posteriorBeta = b+20*(1-p)
+  posteriorRandom <- rbeta(n, posteriorAlpha, posteriorBeta)
+  maxDensity <- max(normalizedLikelihood, prior, posterior) # Use to make the y-axis high enough
+  
+  plot(xGrid, normalizedLikelihood, type = 'l', lwd = 3, col = "blue", xlim <- c(0,1), ylim <- c(0, maxDensity), xlab = "theta", 
+       ylab = 'Density', main = 'Bernoulli model - Beta(a,b) prior')
+  lines(xGrid, posterior, lwd = 3, col = "red")
+  lines(xGrid, prior, lwd = 3, col = "green")
+  legend(x = 0.01, y = maxDensity*0.95, legend = c("Likelihood (normalized)", "Prior", "Posterior"), col = c("blue","green","red"), lwd = c(3,3,3), cex = 0.7)
+  
+  posteriorMean = posteriorAlpha/(posteriorAlpha + posteriorBeta)
+  print(paste0("Posterior Mean GT: ", posteriorMean))
+  print(paste0("ground truth std: ", sqrt(posteriorAlpha*posteriorBeta/(((posteriorAlpha+posteriorBeta)^2)*(posteriorAlpha+posteriorBeta+1)))))
+  print(paste0("std: ", sd(posteriorRandom)))
+  print(paste0("Mean: ", mean(posteriorRandom)))
+}
+
+```
+For 20 and 10000 draws repectively we get:
+
+```{r, echo = FALSE}
+BetaRandomPosteriorPriorPlotandMeanStdComparison(alpha, beta, num, p)
+
+BetaRandomPosteriorPriorPlotandMeanStdComparison(alpha, beta, 10000, p)
+```
+Posterior mean GT is the value that the posterior distribution mean is converging to.
+
+\pagebreak
+
+###b)
+```{r task1b, echo = FALSE}
+  a = 2
+  b = 2
+  n = 10000
+
+  posteriorAlpha = a+20*p
+  posteriorBeta = b+20*(1-p)
+  posteriorRandomDraw <- rbeta(10000, posteriorAlpha, posteriorBeta)
+  posteriorRandomOverCondition = which(posteriorRandomDraw < 0.4)
+  probabilityCondition = length(posteriorRandomOverCondition)/length(posteriorRandomDraw)
+  trueProbability = pbeta(0.4, posteriorAlpha, posteriorBeta)
+  
+  print(paste0("propability condition with random: ", probabilityCondition))
+  print(paste0("ground truth probability: ", trueProbability))
+
+```
+Looking at the plot above, the probability for theta < 0.5|y is very small. The simulated value is relatively close to the ground truth. 
+(Note: The further to the left on the tail, the larger sample we will need as the data points become more sparse.)
+
+###c)
+
+```{r, echo = FALSE}
+  a = 2
+  b = 2
+  n = 10000
+  
+  posteriorAlpha = a+20*p
+  posteriorBeta = b+20*(1-p)
+  posteriorRandomDraw <- rbeta(10000, posteriorAlpha, posteriorBeta)
+  
+  attach(mtcars)
+  par(mfrow=c(1,2)) 
+  hist(posteriorRandomDraw)
+  logOdds = log(posteriorRandomDraw/(1 - posteriorRandomDraw))
+  hist(logOdds)
+  density(logOdds)
+
+```
+\pagebreak
+
+## Task 2
+
+###a
+
+```{r, echo = FALSE}
+library(manipulate)
+library(LaplacesDemon)
+u = 3.5
+y = c(14, 25, 45, 25, 30, 33, 19, 50, 34, 67)
+logY = log(y)
+meanY = sum(y)/length(y)
+meanLogY = sum(logY)/length(logY)
+
+getCdfValue <- function(y, target){
+  sortedY = sort(y)
+  n = length(sortedY)
+  i = 0
+  for(dataPoint in sortedY){
+    i = i + 1
+    if(dataPoint >= target){
+      return(i/n)
+    }
+  }
+}
+
+getDistrubutionFromPoints <- function(x){
+  n = length(x)
+  sortedX = sort(x)
+  cumPercent = (1:n)/n
+  densityPercent = (cumPercent[2:n] - cumPercent[1:n-1])/(sortedX[2:n] - sortedX[1:(n-1)])
+  #dataMatrix = matrix(1:(2*n-2), nrow=n-1, ncol=2, byrow=TRUE)
+  #dataMatrix[ ,1] = sortedX[2:n]
+  #dataMatrix[ ,2] = densityPercent
+  
+  dataMatrix = matrix(1:(2*n), nrow=n, ncol=2, byrow=TRUE)
+  dataMatrix[ ,1] = sortedX
+  dataMatrix[ ,2] = cumPercent
+  
+  return(dataMatrix)
+}
+
+getIntervalData <- function(x, lowerPercent, upperPercent){
+  lowerFlag = FALSE
+  upperFlag = FALSE
+  n = length(x)
+  sortedX = sort(x)
+  i = 0
+  for(data in x) {
+    i = i + 1
+    if(i/n >= lowerPercent && !lowerFlag) {
+      lowerFlag = TRUE
+      lowerIndex = i
+    }
+    else if(i/n > upperPercent){
+      upperIndex = i - 1
+      upperFlag = TRUE
+      break;
+    }
+    
+  }
+  if(!upperFlag){
+    upperIndex = n
+  }
+  return(sortedX[lowerIndex:upperIndex])
+}
+
+
+drawFromPosterior <- function(mean, n, logy, task){
+  xGrid <- seq(0.001, 0.999, by=0.001)
+  tau2 = (sum(logy - mean)^2)/n
+  posterior = dinvchisq(xGrid, n, tau2, log=FALSE)
+  
+  maxDensity <- max(posterior)
+  
+  posteriorRandomDraw <- rinvchisq(10000,  n, tau2)
+  
+  #plotting
+  if(task == "a"){
+  attach(mtcars)
+  par(mfrow=c(2,2))
+  plot(xGrid, posterior, type = 'l', lwd = 3, col = "blue", xlim <- c(0,1), ylim <- c(0, maxDensity), 
+       xlab = "theta", ylab = 'Density', main = 'Chi Posterior of Variance')
+  plot(sort(posteriorRandomDraw), xlab="no. of draws", ylab = "Cumulative probability", 
+       main = "CDF posterior random draws")
+  hist(posteriorRandomDraw)
+  }
+  #part b)
+  giniTheory = 2*pnorm(posteriorRandomDraw/sqrt(2), mean = 0, sd = 1) - 1
+  logGini = log(giniTheory)
+  distrubtionGiniLog = getDistrubutionFromPoints(logGini)
+  distrubtionGini = getDistrubutionFromPoints(giniTheory)
+  if (task == "b"){
+    attach(mtcars)
+    par(mfrow=c(2,2)) 
+    plot(distrubtionGiniLog, xlab = "logGini coef.", ylab = "Cumulative probability", main = "logGIni CDF")
+    hist(logGini)
+    plot(distrubtionGini, xlab = "Gini coef.", ylab = "Cumulative probability", main = "Gini CDF")
+    hist(giniTheory)
+  }
+  #part c)
+  if (task == "c"){
+    #attach(mtcars)
+    lowerData = getIntervalData(giniTheory, 0, 0.025)
+    middleData = getIntervalData(giniTheory, 0.025, 0.975)
+    upperData = getIntervalData(giniTheory, 0.975, 1)
+    
+    print(density(middleData))
+    print(min(middleData))
+    print(max(middleData))
+  }
+}
+
+#Call task a
+num = length(logY)
+draws = drawFromPosterior(u, num, logY, task = "a")
+```
+
+###b
+```{r, echo = FALSE}
+#Call taks b
+u = 3.5
+y = c(14, 25, 45, 25, 30, 33, 19, 50, 34, 67)
+logY = log(y)
+meanY = sum(y)/length(y)
+meanLogY = sum(logY)/length(logY)
+num = length(logY)
+draws = drawFromPosterior(u, num, logY, task = "b")
+```
+
+###c
+
+```{r, echo = FALSE}
+#Call taks c
+u = 3.5
+y = c(14, 25, 45, 25, 30, 33, 19, 50, 34, 67)
+logY = log(y)
+meanY = sum(y)/length(y)
+meanLogY = sum(logY)/length(logY)
+num = length(logY)
+draws = drawFromPosterior(u, num, logY, task = "c")
+```
+
+## Task 3
+
+###a
+
+###b
