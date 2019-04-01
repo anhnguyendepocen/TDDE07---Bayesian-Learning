@@ -102,8 +102,8 @@ Looking at the plot above, the probability for theta < 0.5|y is very small. The 
 
 ###a
 
-```{r, echo = FALSE}
-library(manipulate)
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+#library(manipulate)
 library(LaplacesDemon)
 u = 3.5
 y = c(14, 25, 45, 25, 30, 33, 19, 50, 34, 67)
@@ -216,7 +216,7 @@ draws = drawFromPosterior(u, num, logY, task = "a")
 ```
 
 ###b
-```{r, echo = FALSE}
+```{r, echo = FALSE, message = FALSE}
 #Call taks b
 u = 3.5
 y = c(14, 25, 45, 25, 30, 33, 19, 50, 34, 67)
@@ -229,7 +229,7 @@ draws = drawFromPosterior(u, num, logY, task = "b")
 
 ###c
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message = FALSE}
 #Call taks c
 u = 3.5
 y = c(14, 25, 45, 25, 30, 33, 19, 50, 34, 67)
@@ -244,4 +244,43 @@ draws = drawFromPosterior(u, num, logY, task = "c")
 
 ###a
 
+```{r, echo = FALSE, message = FALSE}
+library("circular")
+mu = 2.39
+obsRad = c(-2.44, 2.14, 2.54, 1.83, 2.02, 2.33, -2.79, 2.23, 2.07, 2.02)
+
+kGrid <- seq(0, 20, by=0.01)
+
+priorDist <- rexp(kGrid, 1)
+kappa = kGrid
+
+dvonmises <- function(y, mu, kappa){
+  res = 1
+  for (i in y){
+      res = res*(exp(kappa*cos(i-mu))/(2*pi*besselI(kappa,1)))
+      
+  }
+  return(res)
+}
+
+likeliHood <- dvonmises(obsRad, mu, kappa)
+
+posterior = likeliHood*priordDist
+
+
+
+```
+
+
+  for (i in range(1:length(y))){
+      print(i)
+  }
+  return(res)
+}
+
+
 ###b
+
+```{r, echo = FALSE, message = FALSE}
+
+```
