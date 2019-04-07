@@ -10,10 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Task 1
+Let y1, ..., yn|theta - Bern(theta), and assume that you have obtained a sample with s = 14 successes in n = 20 trials. Assume a Beta(alpha0, beta0) prior for theta and let alpha0 = beta0 = 2.
 
-###a)
+###a) Posterior theta|y - Bern(alpha0 + s, beta0 + f).
+Verify graphically that the posterior mean and standard deviation converges to the true values as the number of random draws grows large.
 
 ```{r taks1a, echo = FALSE}
+#library(LaplacesDemon)
+
   alpha = 2
   beta = 2
   s = 14
@@ -21,7 +25,7 @@ knitr::opts_chunk$set(echo = TRUE)
   f = num - s
   p = s/num
   
-BetaRandomPosteriorPriorPlotandMeanStdComparison <- function(a,b,n,p){
+BetaRandomPosteriorPriorPlotandMeanStdComparison <- function(a,b,n,p, flag){
   
   xGrid <- seq(0.001, 0.999, by=0.001)
   normalizedLikelihood = dbeta(xGrid, 20*p+1, 20*(1-p)+1)
@@ -32,32 +36,41 @@ BetaRandomPosteriorPriorPlotandMeanStdComparison <- function(a,b,n,p){
   posteriorRandom <- rbeta(n, posteriorAlpha, posteriorBeta)
   maxDensity <- max(normalizedLikelihood, prior, posterior) # Use to make the y-axis high enough
   
-  plot(xGrid, normalizedLikelihood, type = 'l', lwd = 3, col = "blue", xlim <- c(0,1), ylim <- c(0, maxDensity), xlab = "theta", 
-       ylab = 'Density', main = 'Bernoulli model - Beta(a,b) prior')
-  lines(xGrid, posterior, lwd = 3, col = "red")
-  lines(xGrid, prior, lwd = 3, col = "green")
-  legend(x = 0.01, y = maxDensity*0.95, legend = c("Likelihood (normalized)", "Prior", "Posterior"), col = c("blue","green","red"), lwd = c(3,3,3), cex = 0.7)
-  
   posteriorMean = posteriorAlpha/(posteriorAlpha + posteriorBeta)
   print(paste0("Posterior Mean GT: ", posteriorMean))
   print(paste0("ground truth std: ", sqrt(posteriorAlpha*posteriorBeta/(((posteriorAlpha+posteriorBeta)^2)*(posteriorAlpha+posteriorBeta+1)))))
   print(paste0("std: ", sd(posteriorRandom)))
   print(paste0("Mean: ", mean(posteriorRandom)))
+  
+  if (flag == TRUE){
+      plot(xGrid, normalizedLikelihood, type = 'l', lwd = 3, col = "blue", xlim <- c(0,1), 
+          ylim <- c(0, maxDensity), xlab = "theta", 
+          ylab = 'Density', main = 'Bernoulli model - Beta(a,b) prior')
+  lines(xGrid, posterior, lwd = 3, col = "red")
+  lines(xGrid, prior, lwd = 3, col = "green")
+  legend(x = 0.01, y = maxDensity*0.95, legend = c("Likelihood (normalized)", "Prior", "Posterior"), 
+         col = c("blue","green","red"), lwd = c(3,3,3), cex = 0.7)    
+  }
+
 }
 
 ```
-For 20 and 10000 draws repectively we get:
+For 20 draws we get:
 
 ```{r, echo = FALSE}
-BetaRandomPosteriorPriorPlotandMeanStdComparison(alpha, beta, num, p)
+BetaRandomPosteriorPriorPlotandMeanStdComparison(alpha, beta, num, p, FALSE)
 
-BetaRandomPosteriorPriorPlotandMeanStdComparison(alpha, beta, 10000, p)
 ```
-Posterior mean GT is the value that the posterior distribution mean is converging to.
+
+For 10 0000 draws we get:
+```{r, echo = FALSE}
+BetaRandomPosteriorPriorPlotandMeanStdComparison(alpha, beta, 10000, p, TRUE)
+```
 
 \pagebreak
 
 ###b)
+Using 10 000 draws we seek to comupte the posterior probability Pr(theta < 0.4|y).
 ```{r task1b, echo = FALSE}
   a = 2
   b = 2
@@ -78,6 +91,7 @@ Looking at the plot above, the probability for theta < 0.5|y is very small. The 
 (Note: The further to the left on the tail, the larger sample we will need as the data points become more sparse.)
 
 ###c)
+Computing posterior distribution of the log-odds by simulating 10 000 random draws.
 
 ```{r, echo = FALSE}
   a = 2
@@ -99,9 +113,11 @@ Looking at the plot above, the probability for theta < 0.5|y is very small. The 
 \pagebreak
 
 ## Task 2
+Log-normal distribution and the Gini coefficient
+###a)
+Simunaltion 10 000 draws from posterior of variance, assuming mean = 3.5 and comparing with the theoretical Inv Chi square posterior distribution.
 
-###a
-
+"Chi posterior of variance" plot is the basis for comparison. The posterior CDF of the random draws together with the histogram of the random posterior shows that the ...... [TBD]
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 #library(manipulate)
 library(LaplacesDemon)
@@ -215,7 +231,8 @@ num = length(logY)
 draws = drawFromPosterior(u, num, logY, task = "a")
 ```
 
-###b
+###b)
+Using posterior from a) to compute the posterior distribution of the Gini coefficient for the current dataset.
 ```{r, echo = FALSE, message = FALSE}
 #Call taks b
 u = 3.5
@@ -227,8 +244,8 @@ num = length(logY)
 draws = drawFromPosterior(u, num, logY, task = "b")
 ```
 
-###c
-
+###c)
+Using posterior draws from b) to calculate a 95% euqal tail credible interval for the Gini coefficient G. In addition a kernel density estimate of the posterior of G to use that kernel density to compute a 95% HPD intercal for G. 
 ```{r, echo = FALSE, message = FALSE}
 #Call taks c
 u = 3.5
@@ -241,8 +258,10 @@ draws = drawFromPosterior(u, num, logY, task = "c")
 ```
 
 ## Task 3
+Bayesian inference for the concentration parameter in the von Mises distribution.
 
-###a
+###a)
+Plot the posterior distribution of k (concentration parameter) for the wind direction.
 
 ```{r, echo = FALSE, message = FALSE}
 #Part 3
@@ -252,7 +271,7 @@ obsRad = c(-2.44, 2.14, 2.54, 1.83, 2.02, 2.33, -2.79, 2.23, 2.07, 2.02)
 kGrid <- seq(0.001, 10, by=0.001)
 
 priorDist <- dexp(kGrid)
-plot(kGrid, priorDist)
+#plot(kGrid, priorDist)
 kappa = kGrid
 
 dvonmises <- function(y, mu, kappa){
@@ -264,23 +283,40 @@ dvonmises <- function(y, mu, kappa){
 }
 
 likeliHood <- dvonmises(obsRad, mu, kappa)
-plot(kGrid, likeliHood/(sum(likelihood)*0.001))
+#plot(kGrid, likeliHood/(sum(likeliHood)*0.001))
 posterior = likeliHood*priorDist
 
 posterior = (posterior/sum(posterior))/0.001
+likeliHood = (likeliHood/sum(likeliHood))/0.001
+#Plots
+#attach(mtcars)
+#par(mfrow=c(2,2)) 
+#Prior
+#plot(kGrid, priorDist, main = "Prior distribution")
+#Likelihood
+#plot(kGrid, likeliHood/(sum(likeliHood))*0.001, main = "Likelihood distribution")
+#Posterior
+#plot(kGrid, posterior, main = "Posterior distribution")
 
-plot(kGrid, posterior)
+plot(kGrid, priorDist, type = 'l', lwd = 3, col = "blue", xlab = "k", 
+          ylab = 'Density', main = 'von Mises - Wind direction')
+  lines(kGrid, likeliHood, lwd = 3, col = "red")
+  lines(kGrid, posterior, lwd = 3, col = "green")
+  legend(10, legend = c("Likelihood (normalized)", "Prior", "Posterior"), 
+        col = c("blue","green","red"), lwd = c(3,3,3), cex = 0.7)    
 
+#md = Mode(posterior)
+#index = which(posterior == max(posterior))
+#k = kGrid[index]
+#print(k)
+```
+
+###b)
+Approximate poesterior mode of the concentration parameter k given the information in a).
+```{r, echo = FALSE, message = FALSE}
 md = Mode(posterior)
 index = which(posterior == max(posterior))
 k = kGrid[index]
 print(k)
 ```
-
-###b
-
-```{r, echo = FALSE, message = FALSE}
-
-
-
-```
+Output above shows the approximate mode of k.
