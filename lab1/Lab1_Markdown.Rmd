@@ -144,9 +144,6 @@ getDistrubutionFromPoints <- function(x){
   sortedX = sort(x)
   cumPercent = (1:n)/n
   densityPercent = (cumPercent[2:n] - cumPercent[1:n-1])/(sortedX[2:n] - sortedX[1:(n-1)])
-  #dataMatrix = matrix(1:(2*n-2), nrow=n-1, ncol=2, byrow=TRUE)
-  #dataMatrix[ ,1] = sortedX[2:n]
-  #dataMatrix[ ,2] = densityPercent
   
   dataMatrix = matrix(1:(2*n), nrow=n, ncol=2, byrow=TRUE)
   dataMatrix[ ,1] = sortedX
@@ -221,8 +218,8 @@ drawFromPosterior <- function(mean, n, logy, task){
     upperData = getIntervalData(giniTheory, 0.975, 1)
     
     print(density(middleData))
-    print(min(middleData))
-    print(max(middleData))
+    print(paste0("Lower end of interval: ", min(middleData)))
+    print(paste0("Upper end of interval: ", max(middleData)))
   }
 }
 
@@ -256,6 +253,8 @@ meanLogY = sum(logY)/length(logY)
 num = length(logY)
 draws = drawFromPosterior(u, num, logY, task = "c")
 ```
+We can see that the interval for using our cutoff-method is more narrow than the interval for using the density-function
+
 
 ## Task 3
 Bayesian inference for the concentration parameter in the von Mises distribution.
@@ -271,7 +270,6 @@ obsRad = c(-2.44, 2.14, 2.54, 1.83, 2.02, 2.33, -2.79, 2.23, 2.07, 2.02)
 kGrid <- seq(0.001, 10, by=0.001)
 
 priorDist <- dexp(kGrid)
-#plot(kGrid, priorDist)
 kappa = kGrid
 
 dvonmises <- function(y, mu, kappa){
@@ -283,20 +281,10 @@ dvonmises <- function(y, mu, kappa){
 }
 
 likeliHood <- dvonmises(obsRad, mu, kappa)
-#plot(kGrid, likeliHood/(sum(likeliHood)*0.001))
 posterior = likeliHood*priorDist
 
 posterior = (posterior/sum(posterior))/0.001
 likeliHood = (likeliHood/sum(likeliHood))/0.001
-#Plots
-#attach(mtcars)
-#par(mfrow=c(2,2)) 
-#Prior
-#plot(kGrid, priorDist, main = "Prior distribution")
-#Likelihood
-#plot(kGrid, likeliHood/(sum(likeliHood))*0.001, main = "Likelihood distribution")
-#Posterior
-#plot(kGrid, posterior, main = "Posterior distribution")
 
 plot(kGrid, priorDist, type = 'l', lwd = 3, col = "blue", xlab = "k", 
           ylab = 'Density', main = 'von Mises - Wind direction')
@@ -304,15 +292,10 @@ plot(kGrid, priorDist, type = 'l', lwd = 3, col = "blue", xlab = "k",
   lines(kGrid, posterior, lwd = 3, col = "green")
   legend(10, legend = c("Likelihood (normalized)", "Prior", "Posterior"), 
         col = c("blue","green","red"), lwd = c(3,3,3), cex = 0.7)    
-
-#md = Mode(posterior)
-#index = which(posterior == max(posterior))
-#k = kGrid[index]
-#print(k)
 ```
 
 ###b)
-Approximate poesterior mode of the concentration parameter k given the information in a).
+Approximate posterior mode of the concentration parameter k given the information in a).
 ```{r, echo = FALSE, message = FALSE}
 md = Mode(posterior)
 index = which(posterior == max(posterior))

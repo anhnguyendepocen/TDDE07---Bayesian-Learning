@@ -79,8 +79,8 @@ drawFromPosterior <- function(mean, n, logy){
   upperData = getIntervalData(giniTheory, 0.975, 1)
   
   print(density(middleData))
-  print(min(middleData))
-  print(max(middleData))
+  print(paste0("Lower end of interval: ", min(middleData)))
+  print(paste0("Upper end of interval: ", max(middleData)))
 }
 
 num = length(logY)
