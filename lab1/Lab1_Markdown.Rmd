@@ -87,7 +87,7 @@ Using 10 000 draws we seek to comupte the posterior probability Pr(theta < 0.4|y
   print(paste0("ground truth probability: ", trueProbability))
 
 ```
-Looking at the plot above, the probability for theta < 0.5|y is very small. The simulated value is relatively close to the ground truth. 
+Looking at the plot above, the probability for theta < 0.4|y is very small. The simulated value is relatively close to the ground truth. 
 (Note: The further to the left on the tail, the larger sample we will need as the data points become more sparse.)
 
 ###c)
@@ -117,7 +117,7 @@ Log-normal distribution and the Gini coefficient
 ###a)
 Simunaltion 10 000 draws from posterior of variance, assuming mean = 3.5 and comparing with the theoretical Inv Chi square posterior distribution.
 
-"Chi posterior of variance" plot is the basis for comparison. The posterior CDF of the random draws together with the histogram of the random posterior shows that the ...... [TBD]
+"Chi posterior of variance" plot is the basis for comparison. The posterior CDF of the random draws together with the histogram of the random posterior shows that the randoms draws looks as expected in their cdf och histogram plots compared to the theoretical pdf, with the given look och the chi posterior pdf the cdf should have a relatively flat surface for a lot of values as a lot of values will be around 0.5, this is also shown when looking at the histogram.
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 #library(manipulate)
 library(LaplacesDemon)
@@ -189,13 +189,13 @@ drawFromPosterior <- function(mean, n, logy, task){
   
   #plotting
   if(task == "a"){
-  attach(mtcars)
-  par(mfrow=c(2,2))
-  plot(xGrid, posterior, type = 'l', lwd = 3, col = "blue", xlim <- c(0,1), ylim <- c(0, maxDensity), 
-       xlab = "theta", ylab = 'Density', main = 'Chi Posterior of Variance')
-  plot(sort(posteriorRandomDraw), xlab="no. of draws", ylab = "Cumulative probability", 
-       main = "CDF posterior random draws")
-  hist(posteriorRandomDraw)
+    attach(mtcars)
+    par(mfrow=c(2,2))
+    plot(xGrid, posterior, type = 'l', lwd = 3, col = "blue", xlim <- c(0,1), ylim <- c(0, maxDensity), 
+         xlab = "theta", ylab = 'Density', main = 'Chi Posterior of Variance')
+    plot(sort(posteriorRandomDraw), xlab="no. of draws", ylab = "Cumulative probability", 
+         main = "CDF posterior random draws")
+    hist(posteriorRandomDraw)
   }
   #part b)
   giniTheory = 2*pnorm(posteriorRandomDraw/sqrt(2), mean = 0, sd = 1) - 1
@@ -207,8 +207,8 @@ drawFromPosterior <- function(mean, n, logy, task){
     par(mfrow=c(2,2)) 
     plot(distrubtionGiniLog, xlab = "logGini coef.", ylab = "Cumulative probability", main = "logGIni CDF")
     hist(logGini)
-    plot(distrubtionGini, xlab = "Gini coef.", ylab = "Cumulative probability", main = "Gini CDF")
-    hist(giniTheory)
+    #plot(distrubtionGini, xlab = "Gini coef.", ylab = "Cumulative probability", main = "Gini CDF")
+    #hist(giniTheory)
   }
   #part c)
   if (task == "c"){
@@ -253,7 +253,7 @@ meanLogY = sum(logY)/length(logY)
 num = length(logY)
 draws = drawFromPosterior(u, num, logY, task = "c")
 ```
-We can see that the interval for using our cutoff-method is more narrow than the interval for using the density-function
+We can see that the interval for using our cutoff-method is more narrow than the interval for using the density-function as the kernel density estimate provides a interval of[0.006348, 0.074790] compared to the cutoff-interval of [0.01114952, 0.06998829].
 
 
 ## Task 3
@@ -290,7 +290,7 @@ plot(kGrid, priorDist, type = 'l', lwd = 3, col = "blue", xlab = "k",
           ylab = 'Density', main = 'von Mises - Wind direction')
   lines(kGrid, likeliHood, lwd = 3, col = "red")
   lines(kGrid, posterior, lwd = 3, col = "green")
-  legend(10, legend = c("Likelihood (normalized)", "Prior", "Posterior"), 
+  legend(x = 5, y = 0.8, , legend = c("Likelihood (normalized)", "Prior", "Posterior"), 
         col = c("blue","green","red"), lwd = c(3,3,3), cex = 0.7)    
 ```
 
@@ -302,4 +302,4 @@ index = which(posterior == max(posterior))
 k = kGrid[index]
 print(k)
 ```
-Output above shows the approximate mode of k.
+Output above shows the approximate mode of posterior, which is expected when comparing to the graph above(the green line).
