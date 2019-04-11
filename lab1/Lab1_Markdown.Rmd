@@ -255,6 +255,7 @@ draws = drawFromPosterior(u, num, logY, task = "c")
 ```
 We can see that the interval for using our cutoff-method is more narrow than the interval for using the density-function as the kernel density estimate provides a interval of[0.006348, 0.074790] compared to the cutoff-interval of [0.01114952, 0.06998829].
 
+\pagebreak
 
 ## Task 3
 Bayesian inference for the concentration parameter in the von Mises distribution.
