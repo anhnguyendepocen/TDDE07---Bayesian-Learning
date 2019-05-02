@@ -57,14 +57,14 @@ omegaN = t(matrix_x)%*%matrix_x + omega0
 vN = v0 + 3
 vNsigmaN2 = v0*sigmasq0 + (t(matrix_y)%*%matrix_y + t(mu0)%*%omega0%*%mu0 - t(muN)%*%omegaN%*%muN)
 
-randomSigma2 <- rinvchisq(n = 10, df = vN, scale = (vNsigmaN2/vN))
+randomSigma2 <- rinvchisq(n = 100, df = vN, scale = (vNsigmaN2/vN))
 randomBetas <- c()
 plot(TempLinkoping, col="black")
 sigmas = data.frame(randomSigma2)
 y_df = data.frame(matrix(1, 1000, 1))
-beta0_df = data.frame(1)
-beta1_df = data.frame(1)
-beta2_df = data.frame(1)
+betas0 = c()
+betas1 = c()
+betas2 = c()
 ibeta = 0
 for(singleSigma in randomSigma2) {
   randomBeta <- rmvt(n = 10,mu = muN, S = singleSigma*inv(omegaN))
@@ -77,16 +77,27 @@ for(singleSigma in randomSigma2) {
       ys = c(ys, y)
       xs = c(xs, i/1000)
     }
-    lines(xs, ys, col="red")
-    beta0_df[paste0("trial", ibeta)] <- data.frame(randomBeta[k, 1])
-    beta1_df[paste0("trial", ibeta)] <- data.frame(randomBeta[k, 2])
-    beta2_df[paste0("trial", ibeta)] <- data.frame(randomBeta[k, 3])
+    betas0 = c(betas0, randomBeta[k, 1])
+    betas1 = c(betas1, randomBeta[k, 2])
+    betas2 = c(betas2, randomBeta[k, 3])
     y_df[paste0("trial", ibeta)] <- data.frame(ys)
   }
 }
-
+y_df = subset(y_df, select = -c(1) )
 
 mediany = matrix(1, 1000, 1)
-for (timepoint in y_df) {
-  print(timepoint)
+lowery = matrix(1, 1000, 1)
+uppery = matrix(1, 1000, 1)
+for (row in 1:nrow(y_df)) {
+  mediany[row] = median(as.numeric(as.vector(y_df[row, ])))
+  lowery[row] = quantile(x = as.numeric(as.vector(y_df[row, ])), probs = 0.025)
+  uppery[row] = quantile(x = as.numeric(as.vector(y_df[row, ])), probs = 0.975)
 }
+plot(TempLinkoping, col="black")
+lines(xs, mediany, col="blue")
+lines(xs, lowery, col="red")
+lines(xs, uppery, col="red")
+hist(betas0, nclass=30)
+hist(betas1, nclass=30)
+hist(betas2, nclass=30)
+
