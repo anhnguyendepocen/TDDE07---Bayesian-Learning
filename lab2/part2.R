@@ -68,3 +68,4 @@ for(row in 1:nrow(betas)) {
   working = exp(ladyInput %*% betas[row, ])
   workOrNots = c(workOrNots, working)
 }
+hist(workOrNots, n=30)
