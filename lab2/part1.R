@@ -19,8 +19,8 @@ x['time2'] = ph
 matrix_x = data.matrix(x)
 matrix_y = data.matrix(y)
 
-mu0 = c(-11,92,-80)
-omega0 = matrix(c(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01), 3, 3)
+mu0 = c(-11,85,-70)
+omega0 = matrix(c(0.03, 0, 0, 0, 0.01, 0, 0, 0, 0.03), 3, 3)
 v0 = 3
 sigmasq0 = 0.03
 
@@ -100,4 +100,15 @@ lines(xs, uppery, col="red")
 hist(betas0, nclass=30)
 hist(betas1, nclass=30)
 hist(betas2, nclass=30)
+
+### part c
+
+timeOptimum = -betas1/(2*betas2)
+hist(timeOptimum, nclass=30)
+
+### part d
+
+## If there is a higher order but we are more certain that higher order parameters are not needed we can set the omega-values high as it creates a stronger prior 
+## and the mu-prior values at 0.
+
 
