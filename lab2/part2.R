@@ -26,7 +26,7 @@ nPara <- dim(X)[2];
 mu <- as.vector(rep(0,nPara)) # Prior mean vector
 Sigma <- tau^2*diag(nPara);
 
-LogPostLogistic <- function(betaVect,y,X,mu,Sigma){
+LogPostLogistic <- function(betaVect,y,X,mu,Sigma){ 
   nPara <- length(betaVect);
   linPred <- X%*%betaVect;
   

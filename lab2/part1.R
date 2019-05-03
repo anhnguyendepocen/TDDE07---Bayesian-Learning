@@ -36,13 +36,14 @@ for(singleSigma in randomSigma2) {
   
   for(k in 1:10) {
     ys = c()
-    xs = c()
-    for (i in 1:1000) {
-      y = randomBeta[k, 1] + randomBeta[k, 2]*i/1000 + randomBeta[k, 3]*(i/1000)^2
-      ys = c(ys, y)
-      xs = c(xs, i/1000)
-    }
-    lines(xs, ys, col="red") 
+    xs = cbind(matrix(1, 1000, 1), matrix(1:1000, 1000, 1)/1000, (matrix(1:1000, 1000, 1)/1000)^2)
+    ys = xs%*%randomBeta[k, ]
+    #for (i in 1:1000) {
+    #  y = randomBeta[k, 1] + randomBeta[k, 2]*i/1000 + randomBeta[k, 3]*(i/1000)^2
+    #  ys = c(ys, y)
+    #  xs = c(xs, i/1000)
+    #}
+    lines(matrix(1:1000, 1000, 1)/1000, ys, col="red") 
   }
 }
 
