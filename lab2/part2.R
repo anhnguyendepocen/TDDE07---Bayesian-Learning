@@ -14,7 +14,7 @@ tau <- 10; # Prior scaling factor such that Prior Covariance = (tau^2)*I
 library("mvtnorm") # This command reads the mvtnorm package into R's memory. NOW we can use dmvnorm function.
 
 # Loading data from file
-Data<-read.table("SpamReduced.dat",header=TRUE)  # Spam data from Hastie et al.
+Data<-read.table("WomenWork.dat",header=TRUE)  # Spam data from Hastie et al.
 y <- as.vector(womenWork[,1]); # Data from the read.table function is a data frame. Let's convert y and X to vector and matrix.
 X <- as.matrix(womenWork[,2:9]);
 covNames <- names(womenWork)[2:length(names(womenWork))];
