@@ -112,7 +112,8 @@ lines(xs, lowery, col="red")
 lines(xs, uppery, col="red")
 
 ```
-The interval band does not contain all the datapoints.
+
+The interval band does not contain all the datapoints since it is a 95% approximation of the regression model and not the data points.
 
 ```{r 1.1b}
 attach(mtcars)
@@ -121,16 +122,18 @@ hist(betas0, nclass=30, col='blue')
 hist(betas1, nclass=30, col='red')
 hist(betas2, nclass=30, col='green')
 ```
+\newpage
 
 ### (c)
 ```{r 1c}
 timeOptimum = -betas1/(2*betas2)
-hist(timeOptimum, nclass=30)
+hist(timeOptimum, nclass=200, xlim=c(0, 1))
 ```
 
 ### (d)
-If there is a higher order but we are more certain that higher order parameters are not needed we can set the omega-values high as it creates a stronger prior and the mu-prior values at 0. Which would mitigate the problem of unneccesary high order polynom.
+If there is a higher order but we are more certain that higher order parameters are not needed we can set the omega-values high as it creates a stronger prior and the mu-prior values at 0. Which would mitigate the problem of an unneccesary high order polynom.
 
+\newpage
 
 ## Task 2
 ### (a)
@@ -146,8 +149,6 @@ print(glmModel)
 ```{r 2b}
 chooseCov <- c(1:8) # Here we choose which covariates to include in the model
 tau <- 10; # Prior scaling factor such that Prior Covariance = (tau^2)*I
-###########     END USER INPUT    ################
-
 
 # install.packages("mvtnorm") # Loading a package that contains the multivariate normal pdf
 library("mvtnorm") # This command reads the mvtnorm package into R's memory. NOW we can use dmvnorm function.
