@@ -3,7 +3,7 @@
 # Author: Mattias Villani, Stockholm and Linköping University. http://mattiasvillani.com
 
 # Loading pretty plot settings
-source('~/Dropbox/CodeSnippets/PlotSettingsR.R')
+plotColors = list('red', 'green', 'blue', 'yellow', 'black', 'orange')
 
 # Setup 
 mu1 <- 1
