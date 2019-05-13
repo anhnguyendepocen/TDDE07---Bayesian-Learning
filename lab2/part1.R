@@ -50,9 +50,6 @@ for(singleSigma in randomSigma2) {
 
 ### part b)
 
-
-
-
 muN = inv(t(matrix_x)%*%matrix_x + omega0)%*%(t(matrix_x)%*%matrix_x%*%betahat + omega0%*%mu0)
 omegaN = t(matrix_x)%*%matrix_x + omega0
 vN = v0 + 3

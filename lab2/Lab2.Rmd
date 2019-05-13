@@ -1,0 +1,215 @@
+---
+title: "TDDE07 - Lab 2"
+author: "Ludwig Thaung (ludth852), Elon Brange (elobr959"
+date: "5/4/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mvtnorm)
+library(readr)
+library(matlib)
+library(LaplacesDemon)
+```
+
+## Task 1
+### (a)
+```{r 1a}
+TempLinkoping <- read_csv("TempLinkoping.csv")
+
+x = TempLinkoping['time']
+y = TempLinkoping['temp']
+x['time2'] = x^2
+x['1'] = x['time']/x['time']
+ph = x['time']
+#Just to have the betas in right order
+x['time'] = x['1']
+x['1'] = x['time2']
+x['time2'] = ph
+
+matrix_x = data.matrix(x)
+matrix_y = data.matrix(y)
+
+mu0 = c(-11,85,-70)
+omega0 = matrix(c(0.03, 0, 0, 0, 0.01, 0, 0, 0, 0.03), 3, 3)
+v0 = 3
+sigmasq0 = 0.03
+
+e = rnorm(1, mean = 0, sd = sigmasq0)
+
+
+betahat = inv((t(matrix_x)%*%matrix_x))%*%(t(matrix_x)%*%matrix_y) 
+randomSigma2 <- rinvchisq(n = 10, df = v0, scale = sigmasq0)
+randomBetas <- c()
+library(scales)
+plot(TempLinkoping, col="black") 
+for(singleSigma in randomSigma2) {
+  randomBeta <- rmvt(n = 10,mu = t(mu0), S = singleSigma*inv(omega0))
+  
+  for(k in 1:10) {
+    ys = c()
+    xs = cbind(matrix(1, 1000, 1), matrix(1:1000, 1000, 1)/1000, (matrix(1:1000, 1000, 1)/1000)^2)
+    ys = xs%*%randomBeta[k, ]
+    #for (i in 1:1000) {
+    #  y = randomBeta[k, 1] + randomBeta[k, 2]*i/1000 + randomBeta[k, 3]*(i/1000)^2
+    #  ys = c(ys, y)
+    #  xs = c(xs, i/1000)
+    #}
+    lines(matrix(1:1000, 1000, 1)/1000, ys, col=alpha("red", 0.5)) 
+  }
+}
+```
+
+### (b)
+```{r 1b}
+muN = inv(t(matrix_x)%*%matrix_x + omega0)%*%(t(matrix_x)%*%matrix_x%*%betahat + omega0%*%mu0)
+omegaN = t(matrix_x)%*%matrix_x + omega0
+vN = v0 + 3
+vNsigmaN2 = v0*sigmasq0 + (t(matrix_y)%*%matrix_y + t(mu0)%*%omega0%*%mu0 - t(muN)%*%omegaN%*%muN)
+
+randomSigma2 <- rinvchisq(n = 100, df = vN, scale = (vNsigmaN2/vN))
+randomBetas <- c()
+plot(TempLinkoping, col="black")
+sigmas = data.frame(randomSigma2)
+y_df = data.frame(matrix(1, 1000, 1))
+betas0 = c()
+betas1 = c()
+betas2 = c()
+ibeta = 0
+for(singleSigma in randomSigma2) {
+  randomBeta <- rmvt(n = 10,mu = muN, S = singleSigma*inv(omegaN))
+  for(k in 1:10) {
+    ibeta = ibeta + 1
+    ys = c()
+    xs = c()
+    for (i in 1:1000) {
+      y = randomBeta[k, 1] + randomBeta[k, 2]*i/1000 + randomBeta[k, 3]*(i/1000)^2
+      ys = c(ys, y)
+      xs = c(xs, i/1000)
+    }
+    betas0 = c(betas0, randomBeta[k, 1])
+    betas1 = c(betas1, randomBeta[k, 2])
+    betas2 = c(betas2, randomBeta[k, 3])
+    y_df[paste0("trial", ibeta)] <- data.frame(ys)
+  }
+}
+y_df = subset(y_df, select = -c(1) )
+
+mediany = matrix(1, 1000, 1)
+lowery = matrix(1, 1000, 1)
+uppery = matrix(1, 1000, 1)
+for (row in 1:nrow(y_df)) {
+  mediany[row] = median(as.numeric(as.vector(y_df[row, ])))
+  lowery[row] = quantile(x = as.numeric(as.vector(y_df[row, ])), probs = 0.025)
+  uppery[row] = quantile(x = as.numeric(as.vector(y_df[row, ])), probs = 0.975)
+}
+plot(TempLinkoping, col="black")
+lines(xs, mediany, col="blue")
+lines(xs, lowery, col="red")
+lines(xs, uppery, col="red")
+
+```
+
+The interval band does not contain all the datapoints since it is a 95% approximation of the regression model and not the data points.
+
+```{r 1.1b}
+attach(mtcars)
+par(mfrow=c(1,3))
+hist(betas0, nclass=30, col='blue')
+hist(betas1, nclass=30, col='red')
+hist(betas2, nclass=30, col='green')
+```
+\newpage
+
+### (c)
+```{r 1c}
+timeOptimum = -betas1/(2*betas2)
+hist(timeOptimum, nclass=200, xlim=c(0, 1))
+```
+
+### (d)
+If there is a higher order but we are more certain that higher order parameters are not needed we can set the omega-values high as it creates a stronger prior and the mu-prior values at 0. Which would mitigate the problem of an unneccesary high order polynom.
+
+\newpage
+
+## Task 2
+### (a)
+```{r 2a}
+womenWork<-read.table("WomenWork.dat",header=TRUE)  
+glmModel <- glm(Work ~ 0 + ., data = womenWork, family = binomial)
+print(glmModel)
+
+```
+
+
+### (b)
+```{r 2b}
+chooseCov <- c(1:8) # Here we choose which covariates to include in the model
+tau <- 10; # Prior scaling factor such that Prior Covariance = (tau^2)*I
+
+# install.packages("mvtnorm") # Loading a package that contains the multivariate normal pdf
+library("mvtnorm") # This command reads the mvtnorm package into R's memory. NOW we can use dmvnorm function.
+
+# Loading data from file
+Data<-read.table("WomenWork.dat",header=TRUE)  # Spam data from? Hastie et al.
+y <- as.vector(womenWork[,1]); # Data from the read.table function is a data frame. Let's convert y and X to vector and matrix.
+X <- as.matrix(womenWork[,2:9]);
+covNames <- names(womenWork)[2:length(names(womenWork))];
+X <- X[,chooseCov]; # Here we pick out the chosen covariates.
+covNames <- covNames[chooseCov];
+nPara <- dim(X)[2];
+
+# Setting up the prior
+mu <- as.vector(rep(0,nPara)) # Prior mean vector
+Sigma <- tau^2*diag(nPara);
+
+LogPostLogistic <- function(betaVect,y,X,mu,Sigma){ 
+  nPara <- length(betaVect);
+  linPred <- X%*%betaVect;
+  
+  logLik <- sum( linPred*y -log(1 + exp(linPred)));
+  if (abs(logLik) == Inf) logLik = -20000; # Likelihood is not finite, stear the optimizer away from here!
+  logPrior <- dmvnorm(betaVect, matrix(0,nPara,1), Sigma, log=TRUE);
+  return(logLik + logPrior)
+}
+
+initVal <- as.vector(rep(0,dim(X)[2])); 
+logPost = LogPostLogistic;
+OptimResults<-optim(initVal,logPost,gr=NULL,y,X,mu,Sigma,method=c("BFGS"),control=list(fnscale=-1),hessian=TRUE)
+
+# Printing the results to the screen
+names(OptimResults$par) <- covNames # Naming the coefficient by covariates
+approxPostStd <- sqrt(diag(-solve(OptimResults$hessian))) # Computing approximate standard deviations.
+approxPostStd <- sqrt(diag(-solve(OptimResults$hessian)))
+names(approxPostStd) <- covNames # Naming the coefficient by covariates
+
+betatilde = OptimResults$par
+#Betatilde:
+print(betatilde)
+# Jacobiany beta:
+print(approxPostStd) 
+
+#Intervall NSmallChild
+upperb = betatilde["NSmallChild"] + 1.64*approxPostStd["NSmallChild"]
+lowerb = betatilde["NSmallChild"] - 1.64*approxPostStd["NSmallChild"]
+print(upperb)
+print(lowerb)
+```
+
+### (c)
+```{r 2c}
+covarMatrix = -inv(OptimResults$hessian)
+
+ladyInput = c(1, 10, 8, 10, (10/10)^2, 40, 1, 1)
+workOrNots = c()
+betas = rmvt(n = 1000,mu = matrix(betatilde), S = covarMatrix)
+for(row in 1:nrow(betas)) {
+  working = exp(ladyInput %*% betas[row, ])
+  workOrNots = c(workOrNots, working)
+}
+hist(workOrNots, n=30)
+```
+
