@@ -28,14 +28,12 @@ nPara <- dim(X)[2];
 mu <- as.vector(rep(0,nPara)) # Prior mean vector
 Sigma <- tau^2*diag(nPara);
 
-PoiPost <- function(betaVect,y,X, mu, SigmaGPrior) {
-  nPara <- length(betaVect);
-  
-  linPred <- X%*%betaVect;
-  
+PoiPost <- function(theta,y,X, mu, SigmaGPrior) {
+  nPara <- length(theta);
+  linPred <- X%*%theta;
   logPoiLik <- sum( linPred*y -exp(linPred) - log(factorial(y)));
   if (abs(logPoiLik) == Inf) logPoiLik = -20000; # Likelihood is not finite, stear the optimizer away from here!
-  logBetaPrior <- dmvnorm(betaVect, matrix(0,nPara,1), SigmaGPrior, log=TRUE);
+  logBetaPrior <- dmvnorm(theta, matrix(0,nPara,1), SigmaGPrior, log=TRUE);
   return(logPoiLik + logBetaPrior) 
 }
 
@@ -54,6 +52,26 @@ print(approxPostStd)
 
 ### part c)
 
-RWMSampler <- Function(theta, logPostFunc, ...) {
-  
+
+RWMSampler <- function(logPostFunc, n,  c, covar,  ...) {
+  currentTheta = as.vector(rep(0, dim(covar)[1]))
+  draws = matrix(0, nrow = n, ncol = dim(covar)[1])
+  oldProbability = logPostFunc(currentTheta, ...)
+  for(i in 1:n) {
+    currentDraw <- rmvt(1, mu = currentTheta, S = c*covar)
+    newProbability <- logPostFunc(as.vector(currentDraw), ...)
+    
+    alpha = min(1, newProbability/oldProbability)
+    uniformDraw = runif(1, 0, 1)
+    if(uniformDraw >= alpha) {
+      oldProbability = newProbability
+      currentTheta = currentDraw
+    }
+    draws[i,] = currentDraw
+  }
+  return(draws)
 }
+
+myDraws <- RWMSampler( PoiPost, 10000, 5, diag(diag(-solve(OptimResults$hessian))), y, xMatrix, mu, Sigma)
+
+hist(myDraws[,9])
