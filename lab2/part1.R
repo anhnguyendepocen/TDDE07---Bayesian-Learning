@@ -28,23 +28,20 @@ e = rnorm(1, mean = 0, sd = sigmasq0)
 
 
 betahat = inv((t(matrix_x)%*%matrix_x))%*%(t(matrix_x)%*%matrix_y) 
-randomSigma2 <- rinvchisq(n = 10, df = v0, scale = sigmasq0)
+randomSigma2 <- rinvchisq(n = 100, df = v0, scale = sigmasq0)
 randomBetas <- c()
 plot(TempLinkoping, col="black") 
 for(singleSigma in randomSigma2) {
-  randomBeta <- rmvt(n = 10,mu = t(mu0), S = singleSigma*inv(omega0))
-  
-  for(k in 1:10) {
-    ys = c()
-    xs = cbind(matrix(1, 1000, 1), matrix(1:1000, 1000, 1)/1000, (matrix(1:1000, 1000, 1)/1000)^2)
-    ys = xs%*%randomBeta[k, ]
-    #for (i in 1:1000) {
-    #  y = randomBeta[k, 1] + randomBeta[k, 2]*i/1000 + randomBeta[k, 3]*(i/1000)^2
-    #  ys = c(ys, y)
-    #  xs = c(xs, i/1000)
-    #}
-    lines(matrix(1:1000, 1000, 1)/1000, ys, col="red") 
-  }
+  randomBeta <- rmvt(n = 1,mu = t(mu0), S = singleSigma*inv(omega0))
+  ys = c()
+  xs = cbind(matrix(1, 1000, 1), matrix(1:1000, 1000, 1)/1000, (matrix(1:1000, 1000, 1)/1000)^2)
+  ys = xs%*%randomBeta[1, ]
+  #for (i in 1:1000) {
+  #  y = randomBeta[k, 1] + randomBeta[k, 2]*i/1000 + randomBeta[k, 3]*(i/1000)^2
+  #  ys = c(ys, y)
+  #  xs = c(xs, i/1000)
+  #}
+  lines(matrix(1:1000, 1000, 1)/1000, ys, col="red") 
 }
 
 
@@ -52,10 +49,10 @@ for(singleSigma in randomSigma2) {
 
 muN = inv(t(matrix_x)%*%matrix_x + omega0)%*%(t(matrix_x)%*%matrix_x%*%betahat + omega0%*%mu0)
 omegaN = t(matrix_x)%*%matrix_x + omega0
-vN = v0 + 3
+vN = v0 + 366
 vNsigmaN2 = v0*sigmasq0 + (t(matrix_y)%*%matrix_y + t(mu0)%*%omega0%*%mu0 - t(muN)%*%omegaN%*%muN)
 
-randomSigma2 <- rinvchisq(n = 100, df = vN, scale = (vNsigmaN2/vN))
+randomSigma2 <- rinvchisq(n = 1000, df = vN, scale = (vNsigmaN2/vN))
 randomBetas <- c()
 plot(TempLinkoping, col="black")
 sigmas = data.frame(randomSigma2)
@@ -63,23 +60,25 @@ y_df = data.frame(matrix(1, 1000, 1))
 betas0 = c()
 betas1 = c()
 betas2 = c()
+sigma2s = c()
 ibeta = 0
 for(singleSigma in randomSigma2) {
-  randomBeta <- rmvt(n = 10,mu = muN, S = singleSigma*inv(omegaN))
-  for(k in 1:10) {
-    ibeta = ibeta + 1
-    ys = c()
-    xs = c()
-    for (i in 1:1000) {
-      y = randomBeta[k, 1] + randomBeta[k, 2]*i/1000 + randomBeta[k, 3]*(i/1000)^2
-      ys = c(ys, y)
-      xs = c(xs, i/1000)
-    }
-    betas0 = c(betas0, randomBeta[k, 1])
-    betas1 = c(betas1, randomBeta[k, 2])
-    betas2 = c(betas2, randomBeta[k, 3])
-    y_df[paste0("trial", ibeta)] <- data.frame(ys)
+  randomBeta <- rmvt(n = 1,mu = t(muN), S = singleSigma*inv(omegaN))
+  ibeta = ibeta + 1
+  ys = c()
+  for (i in 1:1000) {
+    y = randomBeta[1, 1] + randomBeta[1, 2]*i/1000 + randomBeta[1, 3]*(i/1000)^2
+    ys = c(ys, y)
   }
+  betas0 = c(betas0, randomBeta[1, 1])
+  betas1 = c(betas1, randomBeta[1, 2])
+  betas2 = c(betas2, randomBeta[1, 3])
+  sigma2s = c(sigma2s, singleSigma)
+  y_df[paste0("trial", ibeta)] <- data.frame(ys)
+}
+xs = c()
+for(i in 1:1000) {
+  xs = c(xs, i/1000)
 }
 y_df = subset(y_df, select = -c(1) )
 
@@ -98,6 +97,7 @@ lines(xs, uppery, col="red")
 hist(betas0, nclass=30)
 hist(betas1, nclass=30)
 hist(betas2, nclass=30)
+hist(sigma2s, nclass=30)
 
 ### part c
 

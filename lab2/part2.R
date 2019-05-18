@@ -53,8 +53,8 @@ print("Jacobiany beta: ")
 print(approxPostStd)
 
 print("Intervall NSmallChild: ")
-upperb = betatilde["NSmallChild"] + 1.64*approxPostStd["NSmallChild"]
-lowerb = betatilde["NSmallChild"] - 1.64*approxPostStd["NSmallChild"]
+upperb = betatilde["NSmallChild"] + 1.96*approxPostStd["NSmallChild"]
+lowerb = betatilde["NSmallChild"] - 1.96*approxPostStd["NSmallChild"]
 print(upperb)
 print(lowerb)
 
@@ -63,9 +63,13 @@ covarMatrix = -inv(OptimResults$hessian)
 
 ladyInput = c(1, 10, 8, 10, (10/10)^2, 40, 1, 1)
 workOrNots = c()
+workOrNotsBinary = c()
 betas = rmvt(n = 1000,mu = matrix(betatilde), S = covarMatrix)
 for(row in 1:nrow(betas)) {
-  working = exp(ladyInput %*% betas[row, ])
+  working = exp(ladyInput %*% betas[row, ])/(1 + exp(ladyInput %*% betas[row, ]))
+  workingBinary = round(working)
   workOrNots = c(workOrNots, working)
+  workOrNotsBinary = c(workOrNotsBinary, workingBinary)
 }
 hist(workOrNots, n=30)
+hist(workOrNotsBinary, n=30)
