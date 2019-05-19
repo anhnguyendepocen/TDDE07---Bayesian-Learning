@@ -17,7 +17,7 @@ sigma2_0 <- rep(var(x),nComp) # s20 (best guess of sigma2)
 nu0 <- rep(4,nComp) # degrees of freedom for prior on sigma2
 
 # MCMC options
-nIter <- 1000 # Number of Gibbs sampling draws
+nIter <- 10 # Number of Gibbs sampling draws
 
 # Plotting options
 plotFit <- TRUE
@@ -100,7 +100,7 @@ for (k in 1:nIter){
   }
   
   # Printing the fitted density against data histogram
-  if (plotFit && (k%%100 ==0)){
+  if (plotFit && (k%%1 ==0)){
     effIterCount <- effIterCount + 1
     hist(x, breaks = 50, freq = FALSE, xlim = c(xGridMin,xGridMax), main = paste("Iteration number",k), ylim = ylim)
     mixDens <- rep(0,length(xGrid))
@@ -114,7 +114,7 @@ for (k in 1:nIter){
     mixDensMean <- ((effIterCount-1)*mixDensMean + mixDens)/effIterCount
     
     lines(xGrid, mixDens, type = "l", lty = 2, lwd = 3, col = 'red')
-    legend("topleft", box.lty = 1, legend = c("Data histogram",components, 'Mixture'), 
+    legend("topright", box.lty = 1, legend = c("Data histogram",components, 'Mixture'), 
            col = c("black",lineColors[1:nComp], 'red'), lwd = 2)
     Sys.sleep(sleepTime)
   }

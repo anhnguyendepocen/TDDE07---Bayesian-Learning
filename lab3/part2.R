@@ -8,7 +8,6 @@ rawData <- read.table("ebayNumberOfBidderData.dat",header=TRUE)
 y <- as.vector(rawData[,1]); # Data from the read.table function is a data frame. Let's convert y and X to vector and matrix.
 X <- rawData[,2:10];
 
-
 model <- glm(y ~ PowerSeller+VerifyID+Sealed+Minblem+MajBlem+LargNeg+LogBook+MinBidShare, data=X, family=poisson())
 
 ## Significant variables are VerifyID, Sealed, MajBlem, LogBook and MinBidShare
@@ -52,7 +51,6 @@ print(approxPostStd)
 
 ### part c)
 
-
 RWMSampler <- function(logPostFunc, n,  c, covar,  ...) {
   currentTheta = as.vector(rep(0, dim(covar)[1]))
   draws = matrix(0, nrow = n, ncol = dim(covar)[1])
@@ -72,6 +70,13 @@ RWMSampler <- function(logPostFunc, n,  c, covar,  ...) {
   return(draws)
 }
 
-myDraws <- RWMSampler( PoiPost, 10000, 5, diag(diag(-solve(OptimResults$hessian))), y, xMatrix, mu, Sigma)
+myDraws <- RWMSampler( PoiPost, 10000, 20, diag(diag(-solve(OptimResults$hessian))), y, xMatrix, mu, Sigma)
 
 hist(myDraws[,9])
+
+for(i in 1:9){
+  plot(myDraws[,i], type='s')
+  a = c(rep(betatilde[i],length(myDraws)))
+  lines(a, col='red')
+}
+
