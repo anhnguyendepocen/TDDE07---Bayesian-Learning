@@ -62,15 +62,17 @@ for(singleSigma in randomSigma2) {
   }
 }
 ```
+The collection of the curves look reasonable as they seem to follow the generalized curve of the datapoints.
+
 
 ### (b)
 ```{r 1b}
 muN = inv(t(matrix_x)%*%matrix_x + omega0)%*%(t(matrix_x)%*%matrix_x%*%betahat + omega0%*%mu0)
 omegaN = t(matrix_x)%*%matrix_x + omega0
-vN = v0 + 3
+vN = v0 + 366
 vNsigmaN2 = v0*sigmasq0 + (t(matrix_y)%*%matrix_y + t(mu0)%*%omega0%*%mu0 - t(muN)%*%omegaN%*%muN)
 
-randomSigma2 <- rinvchisq(n = 100, df = vN, scale = (vNsigmaN2/vN))
+randomSigma2 <- rinvchisq(n = 100, df = vN, scale = (vNsigmaN2))
 randomBetas <- c()
 plot(TempLinkoping, col="black")
 sigmas = data.frame(randomSigma2)
@@ -81,7 +83,7 @@ betas2 = c()
 ibeta = 0
 for(singleSigma in randomSigma2) {
   randomBeta <- rmvt(n = 10,mu = muN, S = singleSigma*inv(omegaN))
-  for(k in 1:10) {
+  k=1
     ibeta = ibeta + 1
     ys = c()
     xs = c()
@@ -94,7 +96,7 @@ for(singleSigma in randomSigma2) {
     betas1 = c(betas1, randomBeta[k, 2])
     betas2 = c(betas2, randomBeta[k, 3])
     y_df[paste0("trial", ibeta)] <- data.frame(ys)
-  }
+  
 }
 y_df = subset(y_df, select = -c(1) )
 
@@ -117,10 +119,11 @@ The interval band does not contain all the datapoints since it is a 95% approxim
 
 ```{r 1.1b}
 attach(mtcars)
-par(mfrow=c(1,3))
+par(mfrow=c(1,4))
 hist(betas0, nclass=30, col='blue')
 hist(betas1, nclass=30, col='red')
 hist(betas2, nclass=30, col='green')
+hist(randomSigma2, nclass=30, col='yellow')
 ```
 \newpage
 
@@ -193,8 +196,8 @@ print(betatilde)
 print(approxPostStd) 
 
 #Intervall NSmallChild
-upperb = betatilde["NSmallChild"] + 1.64*approxPostStd["NSmallChild"]
-lowerb = betatilde["NSmallChild"] - 1.64*approxPostStd["NSmallChild"]
+upperb = betatilde["NSmallChild"] + 1.96*approxPostStd["NSmallChild"]
+lowerb = betatilde["NSmallChild"] - 1.96*approxPostStd["NSmallChild"]
 print(upperb)
 print(lowerb)
 ```
@@ -205,7 +208,7 @@ covarMatrix = -inv(OptimResults$hessian)
 
 ladyInput = c(1, 10, 8, 10, (10/10)^2, 40, 1, 1)
 workOrNots = c()
-betas = rmvt(n = 1000,mu = matrix(betatilde), S = covarMatrix)
+betas = rmvt(n = 1000, mu = matrix(betatilde), S = covarMatrix)
 for(row in 1:nrow(betas)) {
   working = exp(ladyInput %*% betas[row, ])
   workOrNots = c(workOrNots, working)
