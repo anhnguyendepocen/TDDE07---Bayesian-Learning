@@ -2,12 +2,6 @@
 data {
   int<lower=0> N;
   int  y[N];
-  real initialMuMu;
-  real muSigma2;
-  real initialOmegaMu;
-  real omegaSigma2;
-  real sigma2Nu;
-  real sigma2Sigma;
 }
 
 // The parameters accepted by the model. Our model
@@ -23,10 +17,10 @@ parameters {
 // 'y' to be normally distributed with mean 'mu'
 // and standard deviation 'sigma'.
 model {
-  muRandom ~ normal(initialMuMu, muSigma2);
+  //muRandom ~ normal(initialMuMu, muSigma2);
   //sigma2Random ~ scaled_inv_chi_square(sigma2Nu, sigma2Sigma);
-  sigma2Random ~ normal(sigma2Nu, sigma2Sigma);
-  omegaRandom ~ normal(initialOmegaMu, omegaSigma2);
+  //sigma2Random ~ normal(sigma2Nu, sigma2Sigma);
+  //omegaRandom ~ normal(initialOmegaMu, omegaSigma2);
   
   x[1] ~ normal(muRandom, sigma2Random);
   y[1] ~ poisson(exp(x[1]));

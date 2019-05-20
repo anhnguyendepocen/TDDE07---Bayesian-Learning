@@ -6,7 +6,6 @@ library("rstan") # observe startup messages
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
-bidderData<-read.table("ebayNumberOfBidderData.dat",header=TRUE)
 
 
 ARfunction <- function(n, mu, omega, sigma2) {
@@ -28,19 +27,8 @@ for(i in 1:21) {
 simulatedX <- ARfunction(100000, 10, 1, 1)
 plot(simulatedX, type='l')
 
-
+#What omega does is how much the previous value affect the current value and in which direction
 ### Part b
-
-yI = c(4,5,6,4,0,2,5,3,8,6,10,8)
-Ny = length(yI)
-
-normal_dat <- list(N = Ny, 
-                    y = yI)
-fit <- stan(file = 'lec1stan.stan', data = normal_dat)
-
-print(fit)
-
-###
 
 simulatedX <- c(ARfunction(1000, 10, 0.3, 1))
 simulatedY <- c(ARfunction(1000, 10, 0.95, 1))
@@ -49,56 +37,72 @@ Nx = length(simulatedX)
 Ny = length(simulatedY)
 
 x_dat <- list(N = Nx,
-              X = simulatedX,
-              initialMuMu = 0,
-              muSigma2 = 1,
-              initialOmegaMu = 0,
-              omegaSigma2 = 1,
-              sigma2Nu = 0,
-              sigma2Sigma = 1)
+              X = simulatedX)
 
 y_dat <- list(N = Ny,
-              X = simulatedY,
-              initialMuMu = 0,
-              muSigma2 = 100000,
-              initialOmegaMu = 0,
-              omegaSigma2 = 100000,
-              sigma2Nu = 0,
-              sigma2Sigma = 100000)
+              X = simulatedY)
 
 fitX <- stan(file = 'mystan.stan', data = x_dat)
 print(fitX)
+summaryFitX = summary(fitX)$summary
+dataX = extract(fitX)
+
+meanX = summaryFitX[,1]
+highX = summaryFitX[,8]
+lowX = summaryFitX[,4]
+efficientX = summaryFitX[, 9]
+print(meanX)
+print(highX)
+print(lowX)
+print(efficientX)
+
+plot(dataX$muRandom, dataX$omegaRandom)
+
+library(MASS)
+den3d <- kde2d(dataX$muRandom, dataX$omegaRandom)
+library(plotly)
+plot_ly(x=den3d$x, y=den3d$y, z=den3d$z/length(dataX$muRandom)) %>% add_surface()
+
+plot(cumsum(dataX$muRandom)/seq(1,length(dataX$muRandom)), type='l')
+plot(cumsum(dataX$omegaRandom)/seq(1,length(dataX$omegaRandom)), type='l')
 
 fitY <- stan(file = 'mystan.stan', data = y_dat)
 print(fitY)
+summaryFitY = summary(fitY)$summary
+dataY = extract(fitY)
 
-plot(fitX)
-pairs(fitX, pars = c("muRandom", "sigma2Random", "omegaRandom", "lp__"))
+meanY = summaryFitY[,1]
+highY = summaryFitY[,8]
+lowY = summaryFitY[,4]
+efficientY = summaryFitY[, 9]
+print(meanY)
+print(highY)
+print(lowY)
+print(efficientY)
+
+plot(dataY$muRandom, dataY$omegaRandom)
+
+library(MASS)
+den3d <- kde2d(dataY$muRandom, dataY$omegaRandom)
+library(plotly)
+plot_ly(x=den3d$x, y=den3d$y, z=den3d$z/length(dataY$muRandom)) %>% add_surface()
+
+plot(cumsum(dataY$muRandom)/seq(1,length(dataY$muRandom)), type='l')
+plot(cumsum(dataY$omegaRandom)/seq(1,length(dataY$omegaRandom)), type='l')
 ###
 
-simulatedX <- ARfunction(1000, 10, 0.3, 1)
-simulatedY <- ARfunction(1000, 10, 0.95, 1)
+#pairs(fit, pars = c("mu", "tau", "lp__"))
 
-schools_dat <- list(J = 8, 
-                    y = c(28,  8, -3,  7, -1,  1, 18, 12),
-                    sigma = c(15, 10, 16, 11,  9, 11, 10, 18))
-
-fit <- stan(file = '8schools.stan', data = schools_dat)
-
-print(fit)
-plot(fit)
-pairs(fit, pars = c("mu", "tau", "lp__"))
-
-la <- extract(fit, permuted = TR UE) # return a list of arrays 
-mu <- la$mu 
+#la <- extract(fit, permuted = TR UE) # return a list of arrays 
+#mu <- la$mu 
 
 ### return an array of three dimensions: iterations, chains, parameters 
-a <- extract(fit, permuted = FALSE) 
+#a <- extract(fit, permuted = FALSE) 
 
 ### use S3 functions on stanfit objects
-a2 <- as.array(fit)
-m <- as.matrix(fit)
-d <- as.data.frame(fit)
+#a2 <- as.array(fit)
+#m <- as.matrix(fit)
+#d <- as.data.frame(fit)
 
 ### part c
 campyData<-c(t(read.table("campy.dat",header=TRUE)))
@@ -106,27 +110,43 @@ campyData<-c(t(read.table("campy.dat",header=TRUE)))
 Ny = length(campyData)
 
 campy_dat <- list(N = Ny,
-              y = campyData,
-              initialMuMu = 0,
-              muSigma2 = 100000,
-              initialOmegaMu = 0,
-              omegaSigma2 = 100000,
-              sigma2Nu = 0,
-              sigma2Sigma = 100000)
+              y = campyData)
 fitP <- stan(file = 'poisson.stan', data = campy_dat)
 
-print(fitP)
+summaryFitP = summary(fitP)$summary
+rowsCols = dim(summaryFitP)
+highTheta = c()
+meanTheta = c()
+lowTheta = c()
+for(i in 1:(rowsCols[1]-4)) {
+  highTheta = c(highTheta, exp(summaryFitP[i, 8]))
+  meanTheta = c(meanTheta, exp(summaryFitP[i, 1]))
+  lowTheta = c(lowTheta, exp(summaryFitP[i, 4]))
+}
+
+plot(meanTheta, type='l', ylim=c(min(lowTheta), 50))
+lines(highTheta, col='red')
+lines(lowTheta, col='red')
 
 ### part d
 campy_dat <- list(N = Ny,
                   y = campyData,
-                  initialMuMu = 0,
-                  muSigma2 = 100000,
-                  initialOmegaMu = 0,
-                  omegaSigma2 = 100000,
-                  sigma2Nu = 0,
-                  sigma2Sigma = 1)
-fitP <- stan(file = 'poisson.stan', data = campy_dat)
+                  sigma2Nu = 50,
+                  sigma2Sigma = 0.01)
+fitP <- stan(file = 'poissonPrior.stan', data = campy_dat)
 
-print(fitP)
+summaryFitP = summary(fitP)$summary
+rowsCols = dim(summaryFitP)
+rowsCols[1] = rowsCols[1] - 4
+highTheta = c()
+meanTheta = c()
+lowTheta = c()
+for(i in 1:rowsCols[1]) {
+  highTheta = c(highTheta, exp(summaryFitP[i, 8]))
+  meanTheta = c(meanTheta, exp(summaryFitP[i, 1]))
+  lowTheta = c(lowTheta, exp(summaryFitP[i, 4]))
+}
 
+plot(meanTheta, type='l', ylim=c(min(lowTheta), 50))
+lines(highTheta, col='red')
+lines(lowTheta, col='red')
