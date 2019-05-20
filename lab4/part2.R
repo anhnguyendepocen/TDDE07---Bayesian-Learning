@@ -89,21 +89,6 @@ plot_ly(x=den3d$x, y=den3d$y, z=den3d$z/length(dataY$muRandom)) %>% add_surface(
 
 plot(cumsum(dataY$muRandom)/seq(1,length(dataY$muRandom)), type='l')
 plot(cumsum(dataY$omegaRandom)/seq(1,length(dataY$omegaRandom)), type='l')
-###
-
-#pairs(fit, pars = c("mu", "tau", "lp__"))
-
-#la <- extract(fit, permuted = TR UE) # return a list of arrays 
-#mu <- la$mu 
-
-### return an array of three dimensions: iterations, chains, parameters 
-#a <- extract(fit, permuted = FALSE) 
-
-### use S3 functions on stanfit objects
-#a2 <- as.array(fit)
-#m <- as.matrix(fit)
-#d <- as.data.frame(fit)
-
 ### part c
 campyData<-c(t(read.table("campy.dat",header=TRUE)))
 
