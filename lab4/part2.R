@@ -7,7 +7,6 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 
-
 ARfunction <- function(n, mu, omega, sigma2) {
   x = matrix(0, n, 1)
   x[1, 1] = mu

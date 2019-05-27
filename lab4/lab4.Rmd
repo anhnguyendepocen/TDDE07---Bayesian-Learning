@@ -1,0 +1,201 @@
+---
+title: "Computer Lab 4"
+author: "Elon Brange, Ludwig Thaung"
+date: "5/23/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(mvtnorm)
+library(readr)
+library(matlib)
+library(LaplacesDemon)
+library("rstan") # observe startup messages
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+
+```
+
+## Computer Lab 4
+
+
+##1
+
+### 1 a)
+
+```{r 1a}
+ARfunction <- function(n, mu, omega, sigma2) {
+  x = matrix(0, n, 1)
+  x[1, 1] = mu
+  noise <- rnorm(n-1,0,sigma2)
+  for(i in 1:(n-1)) {
+    x[i+1, 1] = mu + omega*(x[i, 1] - mu) + noise[i]
+  }
+  return(x)
+}
+
+simulatedX <- ARfunction(200, 10, -11/10 + 1, 2)
+plot(simulatedX, type='l')
+
+simulatedX <- ARfunction(200, 10, -11/10 + 2, 2)
+plot(simulatedX, type='l')
+
+```
+
+The effect of Phi on X1:T is that, depending on the value of Phi determines X1:T's autocorrelation with the previous value of the difference between X1:T-1 and the mean(mu). 
+I.e. what omega does is how much the previous value affect the current value and in which direction.
+
+
+### 1 b)
+```{r 1b}
+
+simulatedX <- c(ARfunction(1000, 10, 0.3, 1))
+simulatedY <- c(ARfunction(1000, 10, 0.95, 1))
+
+Nx = length(simulatedX)
+Ny = length(simulatedY)
+
+x_dat <- list(N = Nx,
+              X = simulatedX)
+
+y_dat <- list(N = Ny,
+              X = simulatedY)
+
+fitX <- stan(file = 'mystan.stan', data = x_dat)
+print(fitX)
+summaryFitX = summary(fitX)$summary
+dataX = extract(fitX)
+
+meanX = summaryFitX[,1]
+highX = summaryFitX[,8]
+lowX = summaryFitX[,4]
+efficientX = summaryFitX[, 9]
+
+print(paste0("The 95% interval for mu is: ", lowX[1], " - ", highX[1]))
+print(paste0(" and the mean for mu is: ", meanX[1]))
+
+print(paste0("The 95% interval for sigma is: ", lowX[2], " - ", highX[2]))
+print(paste0(" and the mean for sigma is: ", meanX[2]))
+
+print(paste0("The 95% interval for omega is: ", lowX[3], " - ", highX[3]))
+print(paste0(" and the mean for omega is: ", meanX[3]))
+
+#print(meanX)
+#print(highX)
+#print(lowX)
+#print(efficientX)
+
+plot(dataX$muRandom, dataX$omegaRandom)
+
+library(MASS)
+den3d <- kde2d(dataX$muRandom, dataX$omegaRandom)
+#library(plotly)
+#plot_ly(x=den3d$x, y=den3d$y, z=den3d$z/length(dataX$muRandom)) %>% add_surface()
+
+library(fields)
+image.plot(den3d$x,den3d$y,den3d$z/length(dataX$muRandom),xlab="mu", ylab="phi")
+
+plot(cumsum(dataX$muRandom)/seq(1,length(dataX$muRandom)), type='l', xlab ="index", ylab = "Cumulative sum", main = "Convergence mu")
+plot(cumsum(dataX$omegaRandom)/seq(1,length(dataX$omegaRandom)), type='l', xlab = "index", ylab="Cumulative sum", main = "Convergence Phi")
+
+fitY <- stan(file = 'mystan.stan', data = y_dat)
+print(fitY)
+summaryFitY = summary(fitY)$summary
+dataY = extract(fitY)
+
+meanY = summaryFitY[,1]
+highY = summaryFitY[,8]
+lowY = summaryFitY[,4]
+efficientY = summaryFitY[, 9]
+
+print(paste0("The 95% interval for mu is: ", lowY[1], " - ", highY[1]))
+print(paste0(" and the mean for mu is: ", meanY[1]))
+
+print(paste0("The 95% interval for sigma is: ", lowY[2], " - ", highY[2]))
+print(paste0(" and the mean for sigma is: ", meanY[2]))
+
+print(paste0("The 95% interval for omega is: ", lowY[3], " - ", highY[3]))
+print(paste0(" and the mean for omega is: ", meanY[3]))
+
+
+#print(meanY)
+#print(highY)
+#print(lowY)
+#print(efficientY)
+
+plot(dataY$muRandom, dataY$omegaRandom, xlab ="muRandom", ylab ="omegaRandom", main = "Simulated values")
+
+library(MASS)
+den3d <- kde2d(dataY$muRandom, dataY$omegaRandom)
+#library(plotly)
+#plot_ly(x=den3d$x, y=den3d$y, z=den3d$z/length(dataY$muRandom)) %>% add_surface()
+
+library(fields)
+image.plot(den3d$x,den3d$y,den3d$z/length(dataX$muRandom), xlab="mu", ylab="phi")
+
+plot(cumsum(dataY$muRandom)/seq(1,length(dataY$muRandom)), type='l', , xlab ="index", ylab ="Cumulative sum", main = "Convergence mu")
+plot(cumsum(dataY$omegaRandom)/seq(1,length(dataY$omegaRandom)), type='l', , xlab ="index", ylab ="Cumulative sum", main = "Convergence phi")
+```
+
+i) When compared to the values in SimulatedX & SimulatedY we can see that we are able to estimate the true values.
+
+ii) The two plots show that the parameters converges close to the real value quite quickly.
+
+
+### 1 c)
+```{r 1c}
+campyData<-c(t(read.table("campy.dat",header=TRUE)))
+
+Ny = length(campyData)
+
+campy_dat <- list(N = Ny,
+              y = campyData)
+fitP <- stan(file = 'poisson.stan', data = campy_dat)
+
+summaryFitP = summary(fitP)$summary
+rowsCols = dim(summaryFitP)
+highTheta = c()
+meanTheta = c()
+lowTheta = c()
+for(i in 1:(rowsCols[1]-4)) {
+  highTheta = c(highTheta, exp(summaryFitP[i, 8]))
+  meanTheta = c(meanTheta, exp(summaryFitP[i, 1]))
+  lowTheta = c(lowTheta, exp(summaryFitP[i, 4]))
+}
+
+plot(meanTheta, type='l', ylim=c(min(lowTheta), 50))
+lines(highTheta, col='red')
+lines(lowTheta, col='red')
+```
+### 1 d)
+```{r 1d}
+campy_dat <- list(N = Ny,
+                  y = campyData,
+                  sigma2Nu = 50,
+                  sigma2Sigma = 0.01)
+fitP <- stan(file = 'poissonPrior.stan', data = campy_dat)
+
+summaryFitP = summary(fitP)$summary
+rowsCols = dim(summaryFitP)
+rowsCols[1] = rowsCols[1] - 4
+highTheta = c()
+meanTheta = c()
+lowTheta = c()
+for(i in 1:rowsCols[1]) {
+  highTheta = c(highTheta, exp(summaryFitP[i, 8]))
+  meanTheta = c(meanTheta, exp(summaryFitP[i, 1]))
+  lowTheta = c(lowTheta, exp(summaryFitP[i, 4]))
+}
+
+plot(meanTheta, type='l', ylim=c(min(lowTheta), 50))
+lines(highTheta, col='red')
+lines(lowTheta, col='red')
+```
+
+The posterior has become less volatile. 
+
