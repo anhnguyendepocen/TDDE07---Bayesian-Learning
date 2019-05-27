@@ -17,7 +17,7 @@ sigma2_0 <- rep(var(x),nComp) # s20 (best guess of sigma2)
 nu0 <- rep(4,nComp) # degrees of freedom for prior on sigma2
 
 # MCMC options
-nIter <- 10 # Number of Gibbs sampling draws
+nIter <- 1000 # Number of Gibbs sampling draws
 
 # Plotting options
 plotFit <- TRUE
@@ -65,13 +65,13 @@ xGridMax <- max(xGrid)
 mixDensMean <- rep(0,length(xGrid))
 effIterCount <- 0
 ylim <- c(0,2*max(hist(x, n = 50)$density))
-
+stored_mu = matrix(0, nIter, nComp)
+stored_sigma = matrix(0, nIter, nComp)
 
 for (k in 1:nIter){
   message(paste('Iteration number:',k))
   alloc <- S2alloc(S) # Just a function that converts between different representations of the group allocations
   nAlloc <- colSums(S)
-  print(nAlloc)
   # Update components probabilities
   pi <- rDirichlet(alpha + nAlloc)
   
@@ -84,11 +84,13 @@ for (k in 1:nIter){
     muPost <- wPrior*muPrior + (1-wPrior)*mean(x[alloc == j])
     tau2Post <- 1/precPost
     mu[j] <- rnorm(1, mean = muPost, sd = sqrt(tau2Post))
+    stored_mu[k, j] = mu[j]
   }
   
   # Update sigma2's
   for (j in 1:nComp){
     sigma2[j] <- rScaledInvChi2(1, df = nu0[j] + nAlloc[j], scale = (nu0[j]*sigma2_0[j] + sum((x[alloc == j] - mu[j])^2))/(nu0[j] + nAlloc[j]))
+    stored_sigma[k, j] = sigma2[j]
   }
   
   # Update allocation
@@ -100,7 +102,7 @@ for (k in 1:nIter){
   }
   
   # Printing the fitted density against data histogram
-  if (plotFit && (k%%1 ==0)){
+  if (plotFit && (k%%50 ==0)){
     effIterCount <- effIterCount + 1
     hist(x, breaks = 50, freq = FALSE, xlim = c(xGridMin,xGridMax), main = paste("Iteration number",k), ylim = ylim)
     mixDens <- rep(0,length(xGrid))
@@ -125,3 +127,15 @@ hist(x, breaks = 50, freq = FALSE, xlim = c(xGridMin,xGridMax), main = "Final fi
 lines(xGrid, mixDens, type = "l", lwd = 2, lty = 4, col = "red")
 lines(xGrid, dnorm(xGrid, mean = mean(x), sd = apply(x,2,sd)), type = "l", lwd = 2, col = "blue")
 legend("topright", box.lty = 1, legend = c("Data histogram","Mixture density","Normal density"), col=c("black","red","blue"), lwd = 2)
+
+par(mfrow=c(2,2))
+plot(stored_mu[, 1], type='l', main = 'mu 1')
+plot(stored_mu[, 2], type='l', main = 'mu 2')
+plot(stored_sigma[, 1], type='l', main = 'sigma 1')
+plot(stored_sigma[, 2], type='l', main = 'sigma 2')
+
+par(mfrow=c(2,2))
+plot(stored_mu[20:nIter, 1], type='l', main = 'mu 1')
+plot(stored_mu[20:nIter, 2], type='l', main = 'mu 2')
+plot(stored_sigma[20:nIter, 1], type='l', main = 'sigma 1')
+plot(stored_sigma[20:nIter, 2], type='l', main = 'sigma 2')
